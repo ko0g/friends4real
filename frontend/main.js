@@ -39,14 +39,57 @@ window.onload = () => {
     map.addLayer(routeLayer);
     map.addLayer(mainLayer);
 
-    ready = false;
+    let ready = false;
 
-    start = [];
-    points = [];
+    let clicked = false;
+
+    const startbtn = document.getElementById('startpoint');
+
+    startbtn.onclick = () => {
+        clicked=true;
+    };
+
+    const hoverIcon = document.getElementById('hover-icon');
+    let following = false;
+
+    map.getViewport().addEventListener('mouseenter', () => {
+        if (clicked && !ready) {
+            hoverIcon.style.display = 'block';
+            following = true;
+        }
+    });
+
+    // Hide when mouse leaves
+    map.getViewport().addEventListener('mouseleave', () => {
+        if (clicked && !ready) {
+            hoverIcon.style.display = 'none';
+            following = false;
+        }
+    });
+
+    // Move with cursor
+    map.getViewport().addEventListener('pointermove', (e) => {
+    if (following) {
+        hoverIcon.style.left = `${e.clientX - 2}px`;
+        hoverIcon.style.top = `${e.clientY}px`;
+    }
+    });
+
+    let start = [];
+    let points = [];
 
     const colors = ['red', 'orange', 'blue', 'cyan', 'purple'];
 
     map.on('click', function (event) {
+        if (!clicked) return;
+        if (following){
+            hoverIcon.style.transform = 'translate(-47%, -77.5%) scale(0.55)';
+            setTimeout(() => {
+            hoverIcon.style.display = 'none';
+            }, 290);
+            following = false;
+        }
+        
         const coordinate = event.coordinate;
         const lonLat = ol.proj.toLonLat(coordinate);
 
@@ -126,7 +169,7 @@ window.onload = () => {
                     feature.setStyle(new ol.style.Style({
                         stroke: new ol.style.Stroke({
                             color: curColor,
-                            width: 2,
+                            width: 4,
                             lineDash: [10, 10]
                         })
                     }));
