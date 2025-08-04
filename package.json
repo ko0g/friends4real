@@ -1,0 +1,24 @@
+{
+  "name": "friends4real",
+  "version": "1.0.0",
+  "description": "Web service for parties",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ko0g/friends4real.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ko0g/friends4real/issues"
+  },
+  "homepage": "https://github.com/ko0g/friends4real#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "request": "^2.88.2"
+  }
+}

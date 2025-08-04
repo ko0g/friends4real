@@ -27,6 +27,14 @@ html, body {
     height: 100%;
 }
 #map {
+  cursor: grab;
+}
+
+#map:active {
+  cursor: grabbing;
+}
+
+#map {
     overflow: hidden;
     position: relative;
     margin: 0;
@@ -36,12 +44,13 @@ html, body {
 .map{
     width: 97%;
     height: 96%;
-    border: 2px #EBEBEB solid;
+    border: 1px #EBEBEB solid;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 #overlay{
+    display: none;
     position: absolute;
     padding-bottom: 20px;
     width: 32px;
