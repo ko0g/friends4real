@@ -1,0 +1,64 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+.main{
+    display: flex;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    background: white;
+    overflow: hidden;
+}
+.menu{
+    width: 30%;
+    height: 100%;
+    background: white; 
+    overflow: hidden; 
+    border-right: 2px #EBEBEB solid
+}
+.map-screen{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 70%;
+    height: 100%;
+}
+#map {
+    overflow: hidden;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    border-radius: 25px;
+  }
+.map{
+    width: 97%;
+    height: 96%;
+    border: 2px #EBEBEB solid;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#overlay{
+    position: absolute;
+    padding-bottom: 20px;
+    width: 32px;
+    height: 50px;
+    z-index: 1000;
+}
+.header{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%; height: 131px; 
+    border-bottom: 2px #EBEBEB solid;
+    text-align: center;
+}
+.header-text{
+    color: black; 
+    font-size: 48px;
+    font-family: Kodchasan;
+    font-weight: 400;
+}
