@@ -98,3 +98,52 @@ html, body {
     transition: transform 0.3s;
     transform: translate(-50%, -100%) scale(1);
 }
+.sidebar{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+.toggle_mode{
+    width: 80%;
+    height: 30px;
+    border: 2px rgb(163, 163, 163) solid;
+    border-radius: 25px;
+    display: flex;
+    justify-content: center;
+}
+.toggle_mode_1{
+    width: 50%;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 25px;
+    cursor: pointer;
+}
+.toggle_mode_2{
+    width: 50%;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 25px;
+    cursor: pointer;
+}
+.active{
+    background-color: #d6d6d6;
+    transition: 0.2s;
+}
+.nonactive{
+    transition: 0.2s;
+}
+.nonactive:hover{
+    background-color: #EBEBEB;
+}
+.calc_button{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+#btn{
+    cursor: pointer;
+}
