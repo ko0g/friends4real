@@ -146,6 +146,34 @@ window.onload = () => {
 
     let was_changed = false;
 
+    const list = document.getElementById('frlist');    
+
+    function add_house(x, y, col){
+        let cur_house = document.createElement("div");
+        let cur_house_info = document.createElement("div");
+        let cur_house_col = document.createElement("div");
+        let cur_house_cord = document.createElement("text");
+        let cur_house_order = document.createElement("text");
+
+        cur_house_col.style.width = '15px';
+        cur_house_col.style.height = '15px';
+        cur_house_col.style.borderRadius = '50px';
+        cur_house_col.style.backgroundColor = color;
+
+        cur_house_order.innerHTML = `Дом ${points.length}`;
+        cur_house_cord.innerHTML = `(${x}, ${y})`;
+
+        cur_house.id = 'house_row';
+        cur_house_info.id = 'house_info';
+
+        cur_house_info.appendChild(cur_house_order);
+        cur_house_info.appendChild(cur_house_cord);
+        cur_house_info.appendChild(cur_house_col);
+
+        cur_house.appendChild(cur_house_info);
+        list.appendChild(cur_house);
+    }
+
     map.on('click', function (event) {
         if (!clicked) return;
         was_changed = true;
@@ -168,6 +196,7 @@ window.onload = () => {
         } else {
             color = colors[points.length % colors.length];
             points.push([lonLat[0].toFixed(6), lonLat[1].toFixed(6)]);
+            add_house(lonLat[0].toFixed(4), lonLat[1].toFixed(4), color);
             append_icon(0.75, color, 1, event);
         }
     });
