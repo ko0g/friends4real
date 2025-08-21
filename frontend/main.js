@@ -1,6 +1,7 @@
 'use strict';
 
 const API_KEY_MAP = '1bc282243dca48c0acd5582d97d4e00a';
+const API_KEY_ROUTE = '11f01e0a-ec02-4d5e-aeb2-76e2f4e6efca';
 
 function get_start_point_icon(color){
     return `
