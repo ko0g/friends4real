@@ -51,16 +51,19 @@ window.onload = () => {
     map.addLayer(routeLayer);
     map.addLayer(mainLayer);
 
-    let mode1 = true;
-    let mode2 = false;
+    let mode_opt_route = true;
+    let mode_opt_point = false;
 
-    let tgl1 = document.getElementById('mode1');
-    let tgl2 = document.getElementById('mode2');
+    let toggle_opt_route = document.getElementById('mode_opt_route');
+    let toggle_opt_point = document.getElementById('mode_opt_point');
+
+    let start_point_defined = false;
+    let clicked_on_map = false;
 
     function reset_all(){
-        ready = false;
-        clicked = false;
-        was_changed = false;
+        start_point_defined = false;
+        clicked_on_map = false;
+        map_was_changed = false;
         start = [];
         points = [];
 
@@ -72,12 +75,12 @@ window.onload = () => {
         }
     }
 
-    tgl1.onclick = () => {
-        if (tgl1.classList[1] === "active") return;
-        mode1 = true;
-        mode2 = false;
-        tgl2.classList.replace("active", "nonactive");
-        tgl1.classList.replace("nonactive", "active");
+    toggle_opt_route.onclick = () => {
+        if (toggle_opt_route.classList[1] === "active") return;
+        mode_opt_route = true;
+        mode_opt_point = false;
+        toggle_opt_point.classList.replace("active", "nonactive");
+        toggle_opt_route.classList.replace("nonactive", "active");
         calcbtn.innerHTML = "Построить маршрут";
         startbtn.style.display = 'flex';
         startbtn.innerHTML = 'Выбрать стартовую точку';
@@ -85,55 +88,51 @@ window.onload = () => {
         reset_all();
     };
 
-    tgl2.onclick = () => {
-        if (tgl2.classList[1] === "active") return;
-        mode2 = true;
-        mode1 = false;
-        tgl1.classList.replace("active", "nonactive");
-        tgl2.classList.replace("nonactive", "active");
+    toggle_opt_point.onclick = () => {
+        if (toggle_opt_point.classList[1] === "active") return;
+        mode_opt_point = true;
+        mode_opt_route = false;
+        toggle_opt_route.classList.replace("active", "nonactive");
+        toggle_opt_point.classList.replace("nonactive", "active");
         calcbtn.innerHTML = "Рассчитать точку";
         startbtn_info.innerHTML = 'Итоговая точка: ';
         startbtn.innerHTML = 'Отметить друзей: ';
         reset_all();
     };
 
-    let ready = false;
-
-    let clicked = false;
-
     const startbtn = document.getElementById('startpoint');
     const startbtn_info = document.getElementById('startpoint_info');
     const calcbtn = document.getElementById('btn');
 
-    const controls = map.getTargetElement().querySelectorAll(".ol-control");
+    const map_controls = map.getTargetElement().querySelectorAll(".ol-control");
 
-    controls.forEach(control => {
+    map_controls.forEach(control => {
         control.addEventListener("mouseenter", () => {
             hoverIcon.style.display = "none";
         });
         control.addEventListener("mouseleave", () => {
-            if (clicked && !ready && following) {
+            if (clicked_on_map && !start_point_defined && following) {
                 hoverIcon.style.display = "block";
             }
         });
     });
 
     startbtn.onclick = () => {
-        clicked=true;
+        clicked_on_map=true;
     };
 
     const hoverIcon = document.getElementById('hover-icon');
     let following = false;
 
     map.getViewport().addEventListener('mouseenter', () => {
-        if (clicked && !ready) {
+        if (clicked_on_map && !start_point_defined) {
             hoverIcon.style.display = 'block';
             following = true;
         }
     });
 
     map.getViewport().addEventListener('mouseleave', () => {
-        if (clicked && !ready) {
+        if (clicked_on_map && !start_point_defined) {
             hoverIcon.style.display = 'none';
             following = false;
         }
@@ -153,7 +152,6 @@ window.onload = () => {
 
     function append_icon(_scale, color, type, event){
         const coordinate = event.coordinate;
-        const lonLat = ol.proj.toLonLat(coordinate);
         let svg = null;
         if (type == 0){
             svg = get_start_point_icon(color);
@@ -186,7 +184,7 @@ window.onload = () => {
         "#666666", "#1e5e3a", "#ff2a8a", "#3366ff", "#ff7043"
     ];
 
-    let was_changed = false;
+    let map_was_changed = false;
 
     const list = document.getElementById('frlist');    
 
@@ -217,8 +215,8 @@ window.onload = () => {
     }
 
     map.on('click', function (event) {
-        if (!clicked) return;
-        was_changed = true;
+        if (!clicked_on_map) return;
+        map_was_changed = true;
         if (following){
             hoverIcon.style.transform = 'translate(-47%, -77.5%) scale(0.55)';
             setTimeout(() => {
@@ -230,13 +228,13 @@ window.onload = () => {
         const coordinate = event.coordinate;
         const lonLat = ol.proj.toLonLat(coordinate);
         let color = null;
-        if (!ready) {
+        if (!start_point_defined) {
             hoverIcon.style.left = `${event.clientX - 2}px`;
             hoverIcon.style.top = `${event.clientY}px`;
             startbtn.innerHTML = `${lonLat[0].toFixed(3)}, ${lonLat[1].toFixed(3)}`;
 
             start = [lonLat[0].toFixed(6), lonLat[1].toFixed(6)];
-            ready = true;
+            start_point_defined = true;
             color = 'green';
             append_icon(0.9, color, 0, event);
         } else {
@@ -283,16 +281,16 @@ window.onload = () => {
     }
 
     calcbtn.onclick = () => {
-        if (!was_changed) return;
-        was_changed = false;
+        if (!map_was_changed) return;
+        map_was_changed = false;
         routeSource.clear();
-        if (mode1){
+        if (mode_opt_route){
             for (let i = 0; i < points.length; i++) {
                 calc_opt_route(points[i], colors[i % colors.length], i*2);
             }
         }
-        else if (mode2){
-
+        else if (mode_opt_point){
+            
         }
     };
 };
