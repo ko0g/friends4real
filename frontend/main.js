@@ -1,5 +1,6 @@
+'use strict';
+
 const API_KEY_MAP = '1bc282243dca48c0acd5582d97d4e00a';
-const API_KEY_ROUTE = '11f01e0a-ec02-4d5e-aeb2-76e2f4e6efca';
 
 function get_start_point_icon(color){
     return `
@@ -49,12 +50,72 @@ window.onload = () => {
     map.addLayer(routeLayer);
     map.addLayer(mainLayer);
 
+    let mode1 = true;
+    let mode2 = false;
+
+    let tgl1 = document.getElementById('mode1');
+    let tgl2 = document.getElementById('mode2');
+
+    function reset_all(){
+        ready = false;
+        clicked = false;
+        was_changed = false;
+        start = [];
+        points = [];
+
+        mainSource.clear();
+        routeSource.clear();
+
+        while (frlist.firstChild) {
+            frlist.removeChild(frlist.firstChild);
+        }
+    }
+
+    tgl1.onclick = () => {
+        if (tgl1.classList[1] === "active") return;
+        mode1 = true;
+        mode2 = false;
+        tgl2.classList.replace("active", "nonactive");
+        tgl1.classList.replace("nonactive", "active");
+        calcbtn.innerHTML = "Построить маршрут";
+        startbtn.style.display = 'flex';
+        startbtn.innerHTML = 'Выбрать стартовую точку';
+        startbtn_info.innerHTML = 'Стартовая точка:';
+        reset_all();
+    };
+
+    tgl2.onclick = () => {
+        if (tgl2.classList[1] === "active") return;
+        mode2 = true;
+        mode1 = false;
+        tgl1.classList.replace("active", "nonactive");
+        tgl2.classList.replace("nonactive", "active");
+        calcbtn.innerHTML = "Рассчитать точку";
+        startbtn_info.innerHTML = 'Итоговая точка: ';
+        startbtn.innerHTML = 'Отметить друзей: ';
+        reset_all();
+    };
+
     let ready = false;
 
     let clicked = false;
 
     const startbtn = document.getElementById('startpoint');
+    const startbtn_info = document.getElementById('startpoint_info');
     const calcbtn = document.getElementById('btn');
+
+    const controls = map.getTargetElement().querySelectorAll(".ol-control");
+
+    controls.forEach(control => {
+        control.addEventListener("mouseenter", () => {
+            hoverIcon.style.display = "none";
+        });
+        control.addEventListener("mouseleave", () => {
+            if (clicked && !ready && following) {
+                hoverIcon.style.display = "block";
+            }
+        });
+    });
 
     startbtn.onclick = () => {
         clicked=true;
@@ -89,32 +150,6 @@ window.onload = () => {
         }
     });
 
-    let mode1 = true;
-    let mode2 = false;
-
-    let tgl1 = document.getElementById('mode1');
-    let tgl2 = document.getElementById('mode2');
-
-    tgl1.onclick = () => {
-        if (tgl1.classList[1] == "active") return;
-        mode1 = true;
-        mode2 = false;
-        tgl2.classList.replace("active", "nonactive");
-        tgl1.classList.replace("nonactive", "active");
-        calcbtn.innerHTML = "Построить маршрут";
-    };
-
-    tgl2.onclick = () => {
-        if (tgl2.classList[1] == "active") return;
-        mode2 = true;
-        mode1 = false;
-        tgl1.classList.replace("active", "nonactive");
-        tgl2.classList.replace("nonactive", "active");
-        calcbtn.innerHTML = "Рассчитать точку";
-    };
-
-
-
     function append_icon(_scale, color, type, event){
         const coordinate = event.coordinate;
         const lonLat = ol.proj.toLonLat(coordinate);
@@ -142,7 +177,13 @@ window.onload = () => {
     let start = [];
     let points = [];
 
-    const colors = ['red', 'orange', 'blue', 'cyan', 'purple'];
+    const colors = [
+        "#cc0033", "#12c112ff", "#e6c200", "#2346d1", "#cc4d00",
+        "#6d009c", "#00d6d6", "#c700c4", "#87e600", "#f5a3a3",
+        "#006666", "#cc99ff", "#703c00", "#ffe680", "#660000",
+        "#66ff99", "#666600", "#ffb366", "#000099", "#333333",
+        "#666666", "#1e5e3a", "#ff2a8a", "#3366ff", "#ff7043"
+    ];
 
     let was_changed = false;
 
@@ -158,7 +199,7 @@ window.onload = () => {
         cur_house_col.style.width = '15px';
         cur_house_col.style.height = '15px';
         cur_house_col.style.borderRadius = '50px';
-        cur_house_col.style.backgroundColor = color;
+        cur_house_col.style.backgroundColor = col;
 
         cur_house_order.innerHTML = `Дом ${points.length}`;
         cur_house_cord.innerHTML = `(${x}, ${y})`;
@@ -187,8 +228,12 @@ window.onload = () => {
         
         const coordinate = event.coordinate;
         const lonLat = ol.proj.toLonLat(coordinate);
-
+        let color = null;
         if (!ready) {
+            hoverIcon.style.left = `${event.clientX - 2}px`;
+            hoverIcon.style.top = `${event.clientY}px`;
+            startbtn.innerHTML = `${lonLat[0].toFixed(3)}, ${lonLat[1].toFixed(3)}`;
+
             start = [lonLat[0].toFixed(6), lonLat[1].toFixed(6)];
             ready = true;
             color = 'green';
@@ -200,73 +245,53 @@ window.onload = () => {
             append_icon(0.75, color, 1, event);
         }
     });
+    
+    function calc_opt_route(toPoint, curColor, i) {
+        const body = {
+            from: { lat: Number(start[1]), lon: Number(start[0]) },
+            to:   { lat: Number(toPoint[1]), lon: Number(toPoint[0]) },
+            vehicle: 'foot',
+            locale: 'ru'
+        };
+        
+        fetch('/api/route', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data?.coords?.length) {
+                console.error('Маршрут не найден.');
+                return;
+            }
+            const route = new ol.geom.LineString(data.coords).transform('EPSG:4326', 'EPSG:3857');
+            const feature = new ol.Feature({ geometry: route });
+            feature.setStyle(new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: curColor,
+                    width: 4,
+                    lineDash: [10, 10],
+                    lineDashOffset: i
+                })
+            }));
 
-    const point_precision = 100000;
-    function decodePolyline(encoded) {
-        const points = [];
-        let index = 0, lat = 0, lng = 0;
-
-        while (index < encoded.length) {
-            let b, shift = 0, result = 0;
-            do {
-                b = encoded.charCodeAt(index++) - 63;
-                result |= (b & 0x1f) << shift;
-                shift += 5;
-            } while (b >= 0x20);
-            const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
-            lat += dlat;
-
-            shift = 0;
-            result = 0;
-            do {
-                b = encoded.charCodeAt(index++) - 63;
-                result |= (b & 0x1f) << shift;
-                shift += 5;
-            } while (b >= 0x20);
-            const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
-            lng += dlng;
-
-            points.push([lng / point_precision, lat / point_precision]);
-        }
-
-        return points;
-    }
-
-    function calc(toPoint, curColor, i) {
-        const url = `https://graphhopper.com/api/1/route?point=${start[1]},${start[0]}&point=${toPoint[1]},${toPoint[0]}&vehicle=foot&locale=ru&key=${API_KEY_ROUTE}`;
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                if (data.paths && data.paths.length > 0) {
-                    const coords = decodePolyline(data.paths[0].points);
-                    const route = new ol.geom.LineString(coords).transform('EPSG:4326', 'EPSG:3857');
-                    const feature = new ol.Feature({ geometry: route });
-
-                    feature.setStyle(new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: curColor,
-                            width: 4,
-                            lineDash: [10, 10],
-                            lineDashOffset: i
-                        })
-                    }));
-
-                    routeSource.addFeature(feature);
-                } else {
-                    console.error('Маршрут не найден.');
-                }
-            })
-        .catch(err => {
-            console.error('Ошибка при получении маршрута:', err);
-        });
+            routeSource.addFeature(feature);
+        })
+        .catch(err => console.error('Ошибка при получении маршрута:', err));
     }
 
     calcbtn.onclick = () => {
         if (!was_changed) return;
         was_changed = false;
         routeSource.clear();
-        for (let i = 0; i < points.length; i++) {
-            calc(points[i], colors[i % colors.length], i*2);
+        if (mode1){
+            for (let i = 0; i < points.length; i++) {
+                calc_opt_route(points[i], colors[i % colors.length], i*2);
+            }
+        }
+        else if (mode2){
+
         }
     };
 };

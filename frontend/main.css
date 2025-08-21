@@ -97,7 +97,6 @@ html, body {
 #startpoint{
     cursor: pointer;
     height: 30px;
-    width: 90%;
     border-radius: 30px;
     width: 50%;
     display: flex;
@@ -111,7 +110,6 @@ html, body {
 #startpoint:hover{
     background-color: #dadada;
 }
-
 #hover-icon{
     height: 75px;
     display: none;
