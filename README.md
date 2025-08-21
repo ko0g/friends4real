@@ -25,7 +25,7 @@
 1. Клонируйте репозиторий:
 
 ```bash
-git clone <url>
+git clone https://github.com/ko0g/friends4real.git
 cd friends4real
 ```
 
