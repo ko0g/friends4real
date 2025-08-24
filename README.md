@@ -16,7 +16,7 @@
 ## Технологический стек
 
 - **Frontend:** HTML, CSS, JavaScript, OpenLayers (карты)
-- **Backend:** Node.js, Express
+- **Backend:** node.js, express.js
 - **API:** GraphHopper, Geoapify
 - **Дополнительно:** Dotenv для хранения ключей
 
@@ -25,8 +25,8 @@
 1. Клонируйте репозиторий:
 
 ```bash
-git clone <your-repo-url>
-cd FriendsForReal
+git clone https://github.com/ko0g/friends4real.git
+cd friends4real
 ```
 
 2. Установите зависимости:
