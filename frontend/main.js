@@ -216,6 +216,10 @@ window.onload = () => {
 
     map.on('click', function (event) {
         if (!clicked_on_map) return;
+        if (points.length === 15){
+            alert("Нельзя добавить больше 15 точек");
+            return;
+        }
         map_was_changed = true;
         if (following){
             hoverIcon.style.transform = 'translate(-47%, -77.5%) scale(0.55)';
@@ -245,9 +249,9 @@ window.onload = () => {
         }
     });
     
-    function calc_opt_route(toPoint, curColor, i) {
+    function get_route(fromPoint, toPoint, curColor, i) {
         const body = {
-            from: { lat: Number(start[1]), lon: Number(start[0]) },
+            from: { lat: Number(fromPoint[1]), lon: Number(fromPoint[0]) },
             to:   { lat: Number(toPoint[1]), lon: Number(toPoint[0]) },
             vehicle: 'foot',
             locale: 'ru'
@@ -280,14 +284,47 @@ window.onload = () => {
         .catch(err => console.error('Ошибка при получении маршрута:', err));
     }
 
+    function calc_opt_order(start, points) {
+        return fetch('/api/order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ start, points })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data?.order?.length) {
+                console.error('Ошибка: не получен массив индексов');
+                return [];
+            }
+            const orders = [];
+            let prev = start;
+            data.order.forEach(i => {
+                orders.push([prev, points[i], i]);
+                prev = points[i];
+            });
+            return orders;
+        })
+        .catch(err => {
+            console.error('Ошибка при получении порядка точек:', err);
+            return [];
+        });
+    }
+
+    function draw_routes(orders) {
+        orders.forEach(([from, to, ind], i) => {
+            const color = colors[ind % colors.length];
+            get_route(from, to, color, i * 2);
+        });
+    }
+
     calcbtn.onclick = () => {
-        if (!map_was_changed) return;
+        if (!map_was_changed || points.length === 0) return;
         map_was_changed = false;
         routeSource.clear();
         if (mode_opt_route){
-            for (let i = 0; i < points.length; i++) {
-                calc_opt_route(points[i], colors[i % colors.length], i*2);
-            }
+            calc_opt_order(start, points).then(orders => {
+                draw_routes(orders);
+            });
         }
         else if (mode_opt_point){
             
