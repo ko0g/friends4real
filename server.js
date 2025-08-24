@@ -57,7 +57,7 @@ async function dist(from, to, vehicle = 'foot') {
   params.append('key', process.env.API_KEY_ROUTE);
   try {
     const { data } = await axios.get('https://graphhopper.com/api/1/route', { params });
-    if (!data?.paths?.length) return null;
+    if (!data?.paths?.length) return 0;
     return data.paths[0].distance;
   } catch (err) {
     console.error('getDistance error:', err.response?.data || err.message);
@@ -65,42 +65,44 @@ async function dist(from, to, vehicle = 'foot') {
   }
 }
 
-function fillDistances(arr, gg, dist) {
+function fillDistances(arr, gg, dist, offset) {
   return new Promise((resolve) => {
     let n = arr.length;
     let idx = 0;
     const intervalId = setInterval(async () => {
       let i = Math.floor(idx / n);
       let j = idx % n;
-      if (gg[j][i] != inf) {
-        gg[i][j] = gg[j][i];
+      if (i < j){
+          gg[j][i] = gg[i][j] = await dist({ lat: arr[i][1], lon: arr[i][0] }, { lat: arr[j][1], lon: arr[j][0] });
+          console.log(`Distance from ${arr[i]} to ${arr[j]}: ${gg[i][j]}`);
       }
-      else{
-        gg[i][j] = await dist({ lat: arr[i][0], lon: arr[i][1] }, { lat: arr[j][0], lon: arr[j][1] });
+      else if (i === j){
+        gg[i][j] = 0;
       }
       idx++;
       if (idx === n * n) {
         clearInterval(intervalId);
         resolve();
       }
-    }, 1000);
+    }, offset * 1000);
   });
 }
 
 app.post('/api/order', async (req, res) => {
   try {
     const { start, points } = req.body || {};
-    let n = points.length;
-    if (!start || start[0] == null || start[1] == null || !Array.isArray(points) || n === 0) {
+    
+    if (!start || start[0] == null || start[1] == null || !Array.isArray(points) || points.length === 0) {
       return res.status(400).json({ error: 'start {lat,lon} и points [{lat,lon}, ...] обязательны' });
     }
-    
+    const arr = [start, ...points];
+    let n = arr.length;
 
     const dp = Array.from({ length: n }, () => Array((1<<n)).fill(inf));
     const pr = Array.from({ length: n }, () => Array((1<<n)).fill(-1));
     const gg = Array.from({ length: n }, () => Array(n).fill(inf));
     
-    await fillDistances(points, gg, dist);
+    await fillDistances(arr, gg, dist, n);
     
     dp[0][0] = 0;
     for(let i = 0; i < n; i++) {
@@ -122,17 +124,15 @@ app.post('/api/order', async (req, res) => {
     const order = [];
     let last = 0;
     let mask = (1<<n)-1;
-    for(let i = 1; i < n; i++){
-      if (dp[i][mask] < dp[last][mask]) last = i;
-    }
     while (last !== -1) {
-      order.push(last);
+      if (last !== 0){
+        order.push(last - 1);
+      }
       const p = pr[last][mask];
       mask ^= (1<<last);
       last = p;
     }
-
-    order.reverse();
+    console.log(order, dp[0][(1<<n)-1]);
     return res.json({ order });
   } catch (err) {
     console.error('Order error:', err.message);

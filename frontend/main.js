@@ -75,8 +75,11 @@ window.onload = () => {
         }
     }
 
+    let isCalculating = false;
+    let after_calc = false;
+
     toggle_opt_route.onclick = () => {
-        if (toggle_opt_route.classList[1] === "active") return;
+        if (after_calc || isCalculating || toggle_opt_route.classList[1] === "active") return;
         mode_opt_route = true;
         mode_opt_point = false;
         toggle_opt_point.classList.replace("active", "nonactive");
@@ -89,7 +92,7 @@ window.onload = () => {
     };
 
     toggle_opt_point.onclick = () => {
-        if (toggle_opt_point.classList[1] === "active") return;
+        if (after_calc || isCalculating || toggle_opt_point.classList[1] === "active") return;
         mode_opt_point = true;
         mode_opt_route = false;
         toggle_opt_route.classList.replace("active", "nonactive");
@@ -118,6 +121,7 @@ window.onload = () => {
     });
 
     startbtn.onclick = () => {
+        if (isCalculating || after_calc) return;
         clicked_on_map=true;
     };
 
@@ -150,7 +154,7 @@ window.onload = () => {
         }
     });
 
-    function append_icon(_scale, color, type, event){
+    function append_icon(_scale, color, type, event, ind){
         const coordinate = event.coordinate;
         let svg = null;
         if (type == 0){
@@ -168,6 +172,13 @@ window.onload = () => {
                 anchor: [0.5, 1],
                 src: encoded_svg,
                 scale: _scale
+            }),
+            text: new ol.style.Text({
+                text: (ind === 0 ? '' : `${String.fromCharCode(64 + ind)}`),
+                font: 'bold 14px Arial',
+                fill: new ol.style.Fill({ color: '#000' }),
+                stroke: new ol.style.Stroke({ color: '#fff', width: 2 }),
+                offsetY: (ind === 0 ? 0 : -24)
             })
         }));
         mainSource.addFeature(pointFeature);
@@ -188,7 +199,7 @@ window.onload = () => {
 
     const list = document.getElementById('frlist');    
 
-    function add_house(x, y, col){
+    function add_house(x, y, col, ord, ind, flag){
         let cur_house = document.createElement("div");
         let cur_house_info = document.createElement("div");
         let cur_house_col = document.createElement("div");
@@ -200,7 +211,12 @@ window.onload = () => {
         cur_house_col.style.borderRadius = '50px';
         cur_house_col.style.backgroundColor = col;
 
-        cur_house_order.innerHTML = `Дом ${points.length}`;
+        if (flag) {
+            cur_house_order.innerHTML = `${ord}. Дом ${String.fromCharCode(64 + ind)}`;
+        }
+        else{
+            cur_house_order.innerHTML = `Дом ${String.fromCharCode(64 + ind)}`;
+        }
         cur_house_cord.innerHTML = `(${x}, ${y})`;
 
         cur_house.id = 'house_row';
@@ -209,13 +225,13 @@ window.onload = () => {
         cur_house_info.appendChild(cur_house_order);
         cur_house_info.appendChild(cur_house_cord);
         cur_house_info.appendChild(cur_house_col);
-
+        
         cur_house.appendChild(cur_house_info);
         list.appendChild(cur_house);
     }
 
     map.on('click', function (event) {
-        if (!clicked_on_map) return;
+        if (!clicked_on_map || isCalculating || after_calc) return;
         if (points.length === 15){
             alert("Нельзя добавить больше 15 точек");
             return;
@@ -240,16 +256,16 @@ window.onload = () => {
             start = [lonLat[0].toFixed(6), lonLat[1].toFixed(6)];
             start_point_defined = true;
             color = 'green';
-            append_icon(0.9, color, 0, event);
+            append_icon(0.9, color, 0, event, 0);
         } else {
             color = colors[points.length % colors.length];
             points.push([lonLat[0].toFixed(6), lonLat[1].toFixed(6)]);
-            add_house(lonLat[0].toFixed(4), lonLat[1].toFixed(4), color);
-            append_icon(0.75, color, 1, event);
+            add_house(lonLat[0].toFixed(4), lonLat[1].toFixed(4), color, -1, points.length, false);
+            append_icon(0.75, color, 1, event, points.length);
         }
     });
     
-    function get_route(fromPoint, toPoint, curColor, i) {
+    function get_route(fromPoint, toPoint, curColor, i, order) {
         const body = {
             from: { lat: Number(fromPoint[1]), lon: Number(fromPoint[0]) },
             to:   { lat: Number(toPoint[1]), lon: Number(toPoint[0]) },
@@ -276,6 +292,13 @@ window.onload = () => {
                     width: 4,
                     lineDash: [10, 10],
                     lineDashOffset: i
+                }),
+                text: new ol.style.Text({
+                    text: (order === -1 ? '' : `Путь ${order}`),
+                    font: 'bold 16px Arial',
+                    fill: new ol.style.Fill({ color: '#000' }),
+                    stroke: new ol.style.Stroke({ color: curColor, width: 2 }),
+                    overflow: true
                 })
             }));
 
@@ -311,20 +334,44 @@ window.onload = () => {
     }
 
     function draw_routes(orders) {
+        while (frlist.firstChild) {
+            frlist.removeChild(frlist.firstChild);
+        }
         orders.forEach(([from, to, ind], i) => {
+            add_house(Number(to[0]).toFixed(4), Number(to[1]).toFixed(4), colors[ind % colors.length], i + 1, ind + 1, true);
             const color = colors[ind % colors.length];
-            get_route(from, to, color, i * 2);
+            get_route(from, to, color, i * 2, i + 1);
         });
     }
 
     calcbtn.onclick = () => {
-        if (!map_was_changed || points.length === 0) return;
+        if (after_calc) {
+            reset_all();
+            after_calc = false;
+            startbtn.innerHTML = 'Выбрать стартовую точку';
+            calcbtn.innerHTML = "Построить маршрут";
+        }
+        if (!map_was_changed || points.length === 0 || isCalculating) return;
         map_was_changed = false;
         routeSource.clear();
         if (mode_opt_route){
+            isCalculating = true;
+            let trash = 0;
+            const loadingInterval = setInterval(() => {
+                calcbtn.innerHTML = "Загрузка";
+                for(let i = 0; i < trash; i++) {
+                    calcbtn.innerHTML += ".";
+                }
+                trash++;
+                trash %= 4;
+            }, 400);
             calc_opt_order(start, points).then(orders => {
                 draw_routes(orders);
+                isCalculating = false;
+                calcbtn.innerHTML = "Завершить";
+                clearInterval(loadingInterval);
             });
+            after_calc = true;
         }
         else if (mode_opt_point){
             
