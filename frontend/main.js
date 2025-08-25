@@ -270,6 +270,7 @@ window.onload = () => {
             add_house(lonLat[0].toFixed(4), lonLat[1].toFixed(4), color, -1, points.length, false);
             append_icon(0.75, color, 1, event, points.length);
         }
+        console.log(points);
     });
     
     function get_route(fromPoint, toPoint, curColor, i, order) {
@@ -304,7 +305,7 @@ window.onload = () => {
                     text: (order === -1 ? '' : `Путь ${order}`),
                     font: 'bold 16px Arial',
                     fill: new ol.style.Fill({ color: '#000' }),
-                    stroke: new ol.style.Stroke({ color: curColor, width: 2 }),
+                    stroke: new ol.style.Stroke({ color: curColor, width: 4 }),
                     overflow: true
                 })
             }));
@@ -377,11 +378,19 @@ window.onload = () => {
         while (frlist.firstChild) {
             frlist.removeChild(frlist.firstChild);
         }
-        routes.forEach(([from, to, ind], i) => {
+        let i = 0;
+        const intervalId = setInterval(() => {
+            if (i >= routes.length) {
+                clearInterval(intervalId);
+                
+                return;
+            }
+            const [from, to, ind] = routes[i];
             add_house(Number(to[0]).toFixed(4), Number(to[1]).toFixed(4), colors[ind % colors.length], i + 1, ind + 1, true);
             const color = colors[ind % colors.length];
             get_route(from, to, color, i * 2, i + 1);
-        });
+            i++;
+        }, 1000); 
     }
 
     calcbtn.onclick = () => {
