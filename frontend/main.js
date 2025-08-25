@@ -1,7 +1,6 @@
 'use strict';
 
 const API_KEY_MAP = '1bc282243dca48c0acd5582d97d4e00a';
-const API_KEY_ROUTE = '11f01e0a-ec02-4d5e-aeb2-76e2f4e6efca';
 
 function get_start_point_icon(color){
     return `
@@ -162,7 +161,6 @@ window.onload = () => {
 
     function append_icon(_scale, color, type, event, ind){
         const coordinate = event.coordinate;
-        console.log(coordinate);
         let svg = null;
         if (type == 0){
             svg = get_start_point_icon(color);
@@ -270,7 +268,6 @@ window.onload = () => {
             add_house(lonLat[0].toFixed(4), lonLat[1].toFixed(4), color, -1, points.length, false);
             append_icon(0.75, color, 1, event, points.length);
         }
-        console.log(points);
     });
     
     function get_route(fromPoint, toPoint, curColor, i, order) {
@@ -378,19 +375,19 @@ window.onload = () => {
         while (frlist.firstChild) {
             frlist.removeChild(frlist.firstChild);
         }
-        let i = 0;
-        const intervalId = setInterval(() => {
-            if (i >= routes.length) {
-                clearInterval(intervalId);
-                
-                return;
-            }
-            const [from, to, ind] = routes[i];
-            add_house(Number(to[0]).toFixed(4), Number(to[1]).toFixed(4), colors[ind % colors.length], i + 1, ind + 1, true);
+
+        routes.forEach(([from, to, ind], i) => {
+            add_house(
+                Number(to[0]).toFixed(4),
+                Number(to[1]).toFixed(4),
+                colors[ind % colors.length],
+                i + 1,
+                ind + 1,
+                true
+            );
             const color = colors[ind % colors.length];
             get_route(from, to, color, i * 2, i + 1);
-            i++;
-        }, 1000); 
+        });
     }
 
     calcbtn.onclick = () => {
