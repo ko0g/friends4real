@@ -140,6 +140,30 @@ app.post('/api/order', async (req, res) => {
   }
 });
 
+app.post('/api/point', async (req, res) => {
+  try {
+    const { points } = req.body || {};
+
+    if (!Array.isArray(points) || points.length === 0) {
+      return res.status(400).json({ error: 'points [{lat,lon}, ...] обязательны' });
+    }
+
+    let center = [0, 0];
+    points.forEach(point => {
+      center[0] += Number(point[0]);
+      center[1] += Number(point[1]);
+    });
+    center[0] /= points.length;
+    center[1] /= points.length;
+    console.log('Optimal point:', center);
+    return res.json({ point: center });
+  } catch (err) {
+    console.error('Point error:', err.message);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'main.html'));
 });

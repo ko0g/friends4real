@@ -123,27 +123,33 @@ window.onload = () => {
     startbtn.onclick = () => {
         if (isCalculating || after_calc) return;
         clicked_on_map=true;
+        if (mode_opt_route){
+
+        }
+        else{
+            start_point_defined = true;
+        }
     };
 
     const hoverIcon = document.getElementById('hover-icon');
     let following = false;
 
     map.getViewport().addEventListener('mouseenter', () => {
-        if (clicked_on_map && !start_point_defined) {
+        if (mode_opt_route && clicked_on_map && !start_point_defined) {
             hoverIcon.style.display = 'block';
             following = true;
         }
     });
 
     map.getViewport().addEventListener('mouseleave', () => {
-        if (clicked_on_map && !start_point_defined) {
+        if (mode_opt_route && clicked_on_map && !start_point_defined) {
             hoverIcon.style.display = 'none';
             following = false;
         }
     });
 
     map.getViewport().addEventListener('pointermove', (e) => {
-        if (following) {
+        if (mode_opt_route && following) {
             hoverIcon.style.left = `${e.clientX - 2}px`;
             hoverIcon.style.top = `${e.clientY}px`;
 
@@ -156,6 +162,7 @@ window.onload = () => {
 
     function append_icon(_scale, color, type, event, ind){
         const coordinate = event.coordinate;
+        console.log(coordinate);
         let svg = null;
         if (type == 0){
             svg = get_start_point_icon(color);
@@ -248,7 +255,7 @@ window.onload = () => {
         const coordinate = event.coordinate;
         const lonLat = ol.proj.toLonLat(coordinate);
         let color = null;
-        if (!start_point_defined) {
+        if (mode_opt_route && !start_point_defined) {
             hoverIcon.style.left = `${event.clientX - 2}px`;
             hoverIcon.style.top = `${event.clientY}px`;
             startbtn.innerHTML = `${lonLat[0].toFixed(3)}, ${lonLat[1].toFixed(3)}`;
@@ -333,11 +340,44 @@ window.onload = () => {
         });
     }
 
-    function draw_routes(orders) {
+    function calc_opt_point(points) {
+        return fetch('/api/point', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ points })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data?.point === null) {
+                console.error('Ошибка: не получена оптимальная точка');
+                return [];
+            }
+            const routes = [];
+            let center = data.point;
+            
+            for(let i = 0; i < points.length; i++){
+                routes.push([center, points[i], i]);
+            }
+
+            startbtn.innerHTML = `${center[0].toFixed(3)}, ${center[1].toFixed(3)}`;
+
+            start = [center[0].toFixed(6), center[1].toFixed(6)];
+            start_point_defined = true;
+            let color = 'green';
+            append_icon(0.9, color, 0, { coordinate: ol.proj.fromLonLat(center) }, 0);
+            return routes;
+        })
+        .catch(err => {
+            console.error('Ошибка при получении оптимальной точки:', err);
+            return [];
+        });
+    }
+
+    function draw_routes(routes) {
         while (frlist.firstChild) {
             frlist.removeChild(frlist.firstChild);
         }
-        orders.forEach(([from, to, ind], i) => {
+        routes.forEach(([from, to, ind], i) => {
             add_house(Number(to[0]).toFixed(4), Number(to[1]).toFixed(4), colors[ind % colors.length], i + 1, ind + 1, true);
             const color = colors[ind % colors.length];
             get_route(from, to, color, i * 2, i + 1);
@@ -348,14 +388,19 @@ window.onload = () => {
         if (after_calc) {
             reset_all();
             after_calc = false;
-            startbtn.innerHTML = 'Выбрать стартовую точку';
-            calcbtn.innerHTML = "Построить маршрут";
+            if (mode_opt_point){
+                calcbtn.innerHTML = "Рассчитать точку";
+                startbtn.innerHTML = 'Отметить друзей: ';
+            }
+            else{
+                startbtn.innerHTML = 'Выбрать стартовую точку';
+                calcbtn.innerHTML = "Построить маршрут";
+            }
         }
         if (!map_was_changed || points.length === 0 || isCalculating) return;
         map_was_changed = false;
         routeSource.clear();
-        if (mode_opt_route){
-            isCalculating = true;
+        isCalculating = true;
             let trash = 0;
             const loadingInterval = setInterval(() => {
                 calcbtn.innerHTML = "Загрузка";
@@ -365,8 +410,9 @@ window.onload = () => {
                 trash++;
                 trash %= 4;
             }, 400);
-            calc_opt_order(start, points).then(orders => {
-                draw_routes(orders);
+        if (mode_opt_route){
+            calc_opt_order(start, points).then(routes => {
+                draw_routes(routes);
                 isCalculating = false;
                 calcbtn.innerHTML = "Завершить";
                 clearInterval(loadingInterval);
@@ -374,7 +420,13 @@ window.onload = () => {
             after_calc = true;
         }
         else if (mode_opt_point){
-            
+            calc_opt_point(points).then(orders => {
+                draw_routes(orders);
+                isCalculating = false;
+                calcbtn.innerHTML = "Завершить";
+                clearInterval(loadingInterval);
+            });
+            after_calc = true;
         }
     };
 };
