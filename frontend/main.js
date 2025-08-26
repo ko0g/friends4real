@@ -299,7 +299,7 @@ window.onload = () => {
                     lineDashOffset: i
                 }),
                 text: new ol.style.Text({
-                    text: (order === -1 ? '' : `Путь ${data.distance}`),
+                    text: (mode_opt_route? `Путь ${order}` : `Путь ${data.distance}`),
                     font: 'bold 16px Arial',
                     fill: new ol.style.Fill({ color: '#000' }),
                     stroke: new ol.style.Stroke({ color: curColor, width: 4 }),
