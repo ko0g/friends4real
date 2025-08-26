@@ -19,8 +19,7 @@ app.post('/api/route', async (req, res) => {
     if (!from || !to || from.lat == null || from.lon == null || to.lat == null || to.lon == null) {
       return res.status(400).json({ error: 'from {lat,lon} и to {lat,lon} обязательны' });
     }
-
-    const url = `http://localhost:8000/route/v1/${vehicle}/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`;
+    const url = `http://5.129.241.119:5000/route/v1/${vehicle}/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`;
 
     const { data } = await axios.get(url);
 
@@ -46,7 +45,7 @@ app.post('/api/route', async (req, res) => {
 
 async function dist(from, to, vehicle = 'foot') {
   try {
-    const url = `http://localhost:8000/route/v1/${vehicle}/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false`;
+    const url = `http://5.129.241.119:5000/route/v1/${vehicle}/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false`;
     const { data } = await axios.get(url);
     if (!data?.routes?.length) return 0;
     return data.routes[0].distance;
