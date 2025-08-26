@@ -17,8 +17,7 @@
 
 - **Frontend:** HTML, CSS, JavaScript, OpenLayers (карты)
 - **Backend:** node.js, express.js
-- **API:** GraphHopper, Geoapify
-- **Дополнительно:** Dotenv для хранения ключей
+- **API:** Timeweb server + Docker, Geoapify
 
 ## Установка и запуск
 
@@ -32,11 +31,6 @@ cd friends4real
 2. Установите зависимости:
 ```
 npm install
-```
-
-3. Создайте файл .env в корне проекта и добавьте API-ключ маршрута:
-```
-API_KEY_ROUTE=ваш_ключ_маршрута
 ```
 
 4. Запустите сервер:
