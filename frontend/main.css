@@ -13,6 +13,7 @@ html, body {
     background: white;
     overflow: hidden;
 }
+
 .menu{
     width: 30%;
     height: 100%;
@@ -23,19 +24,20 @@ html, body {
     flex-direction: column;
     justify-content: space-between;
 }
-.navbar {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    align-items: center;
-}
 .map-screen{
     display: flex;
     justify-content: center;
     align-items: center;
     width: 70%;
     height: 100%;
+}
+
+.navbar {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    align-items: center;
 }
 #map {
   cursor: grab;
@@ -82,7 +84,7 @@ html, body {
     font-family: Kodchasan;
     font-weight: 400;
     cursor: default;
-    transition: color 0.5s;
+    transition: 0.2s;
 }
 .header-text:hover{
     color: rgb(136, 0, 199);
@@ -211,4 +213,31 @@ html, body {
     display: flex;
     justify-content: space-around;
     align-items: center;
+}
+
+@media (max-width: 1300px) {
+  .header-text{
+    font-size: 40px;
+  }
+}
+
+@media (max-width: 1200px) {
+  #startpoint{
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .main {
+    flex-direction: column;
+    justify-content: center;
+  }
+  .menu{
+    width: 100%;
+    height: 50%;
+  }
+  .map-screen{
+    width: 100%;
+    height: 50%;
+  }
 }
