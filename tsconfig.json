@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "lib": ["DOM", "ES2015"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "outDir": "frontend/dist",
+    "rootDir": "frontend"
+  },
+  "include": ["frontend/**/*.ts"],
+  "exclude": ["node_modules"]
+}

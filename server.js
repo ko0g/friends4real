@@ -122,7 +122,7 @@ app.post('/api/order', async (req, res) => {
   }
 });
 
-const K = 8;
+const K = 6;
 
 const distCache = new Map();
 
