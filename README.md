@@ -19,7 +19,7 @@
 
 ## Технологический стек
 
-- **Frontend:** HTML, CSS, JavaScript, OpenLayers (карты)
+- **Frontend:** HTML, CSS, JavaScript, OpenLayers (карты), TypeScript
 - **Backend:** node.js, express.js
 - **API:** Timeweb server + Docker, Geoapify
 
