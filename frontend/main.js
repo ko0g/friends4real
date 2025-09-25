@@ -123,7 +123,7 @@ window.onload = () => {
         if (isCalculating || after_calc) return;
         clicked_on_map=true;
         if (mode_opt_route){
-
+            start_point_defined = false;
         }
         else{
             start_point_defined = true;
